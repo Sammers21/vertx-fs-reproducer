@@ -33,6 +33,7 @@ class FsTest {
             emitter ->
               flow.buffer(1024)
                 .map(bytes -> Buffer.buffer(ArrayUtils.toPrimitive(bytes.toArray(new Byte[0]))))
+                // does onComplete action is called when file is written?
                 .subscribe(asyncFile.toSubscriber().onComplete(emitter::onComplete))
           )
         ).blockingAwait();
