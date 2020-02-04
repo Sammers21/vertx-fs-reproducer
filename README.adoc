@@ -1,1 +1,9 @@
 = Vert.x Rxified AsyncFile bug reproducer  
+
+Steps to reproduce the bug
+
+```bash
+./gradlew test 
+```
+
+Actual result - `FsTest` fail: https://github.com/Sammers21/vertx-fs-reproducer/runs/425798841#step:5:31
