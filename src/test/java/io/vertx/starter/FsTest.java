@@ -10,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,4 +42,18 @@ class FsTest {
     }
     vertx.close();
   }
+
+  @Test
+  public void flowReadWorks() throws IOException {
+    Vertx vertx = Vertx.vertx();
+    final Path temp = Files.createTempFile("hello", ".txt");
+    Files.write(temp, "123".getBytes());
+    vertx.fileSystem()
+      .rxOpen(temp.toString(), new OpenOptions().setRead(true))
+      .flatMapPublisher(asyncFile -> asyncFile.toFlowable().mergeWith(asyncFile.rxClose()))
+      .toList()
+      .blockingGet();
+    vertx.close();
+  }
+
 }
