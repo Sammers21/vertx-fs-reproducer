@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -23,23 +25,24 @@ class FsTest {
   @Test
   public void flowSaveWorks() throws IOException {
     Vertx vertx = Vertx.vertx();
-    for (int i = 0; i < 10_000; i++) {
-      final String hello = "hello-world!!!";
-      final Flowable<Byte> flow = Flowable.fromArray(ArrayUtils.toObject(hello.getBytes()));
-      final Path file = Files.createTempFile("hello", ".txt");
-      file.toFile().delete();
-      vertx.fileSystem().rxOpen(file.toString(), new OpenOptions().setWrite(true))
-        .flatMapCompletable(asyncFile ->
-          Completable.create(
-            emitter ->
-              flow.buffer(1024)
-                .map(bytes -> Buffer.buffer(ArrayUtils.toPrimitive(bytes.toArray(new Byte[0]))))
-                // does onComplete action is called when file is written?
-                .subscribe(asyncFile.toSubscriber().onWriteStreamEnd(emitter::onComplete))
-          )
-        ).blockingAwait();
-      assertEquals(new String(Files.readAllBytes(file)), hello);
-    }
+    final AtomicLong counter = new AtomicLong(40);
+    final Flowable<Buffer> flow = Flowable.generate(emitter -> {
+      if (counter.decrementAndGet() == 0) {
+        return;
+      } else {
+        // 8kb
+        emitter.onNext(Buffer.buffer(new byte[1024 * 8]));
+      }
+    });
+    final Path file = Files.createTempFile("hello", ".txt");
+    file.toFile().delete();
+    vertx.fileSystem().rxOpen(file.toString(), new OpenOptions().setWrite(true))
+      .flatMapCompletable(asyncFile ->
+        Completable.create(
+          emitter ->
+            flow.subscribe(asyncFile.toSubscriber().onWriteStreamEnd(emitter::onComplete))
+        )
+      ).blockingGet(10, TimeUnit.SECONDS);
     vertx.close();
   }
 

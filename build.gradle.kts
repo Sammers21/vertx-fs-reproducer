@@ -12,7 +12,7 @@ repositories {
   }
 }
 
-val vertxVersion = "4.0.0-SNAPSHOT"
+val vertxVersion = "3.9.0"
 val junitVersion = "5.3.2"
 
 dependencies {
