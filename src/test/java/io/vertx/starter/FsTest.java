@@ -6,18 +6,14 @@ import io.vertx.core.file.OpenOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.buffer.Buffer;
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(VertxExtension.class)
 class FsTest {
@@ -27,6 +23,7 @@ class FsTest {
     Vertx vertx = Vertx.vertx();
     final AtomicLong counter = new AtomicLong(40);
     final Flowable<Buffer> flow = Flowable.generate(emitter -> {
+      System.out.println("Counter: " + counter.get());
       if (counter.decrementAndGet() == 0) {
         return;
       } else {
